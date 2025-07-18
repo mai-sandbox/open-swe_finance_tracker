@@ -67,7 +67,7 @@ def summarizer(state: FinanceState) -> dict[str, str]:
     try:
         categorized_transactions = json.loads(state["categorized_str"])
         
-        category_totals = {}
+        category_totals: dict[str, float] = {}
         for transaction in categorized_transactions:
             category = transaction.get("category", "Other")
             amount = float(transaction.get("amount", 0))
@@ -157,5 +157,6 @@ graph_builder.add_edge("advisor", END)
 
 # Compile the graph
 compiled_graph = graph_builder.compile()
+
 
 
