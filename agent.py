@@ -214,4 +214,16 @@ graph_builder.add_node("summarizer", summarizer)
 # Add the advisor node to the graph
 graph_builder.add_node("advisor", advisor)
 
+# Add edges to connect the nodes in the proper sequence
+# START -> categorizer -> summarizer -> advisor -> END
+graph_builder.add_edge(START, "categorizer")
+graph_builder.add_edge("categorizer", "summarizer")
+graph_builder.add_edge("summarizer", "advisor")
+graph_builder.add_edge("advisor", END)
+
+# Compile the graph
+graph = graph_builder.compile()
+
+# Export the compiled graph as required
+compiled_graph = graph
 
