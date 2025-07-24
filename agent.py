@@ -14,6 +14,15 @@ class State(TypedDict):
 llm = init_chat_model("anthropic:claude-3-5-sonnet-latest")
 
 # Create the StateGraph
+# Define default state values so the graph can run with empty input
+DEFAULT_STATE = {
+    "transactions": "[]",
+    "category_budget": '{"Groceries":200,"Rent":1000,"Utilities":150,"Entertainment":100}',
+    "categorized_str": "",
+    "summary_str": ""
+}
+
+# Create the StateGraph
 graph_builder = StateGraph(State)
 
 # Node functions will be implemented in subsequent tasks
@@ -21,10 +30,8 @@ def categorizer(state: State) -> dict:
     """Categorizer node - uses LLM to assign category field to each transaction"""
     # Ensure default state values are set if not provided
     transactions = state.get("transactions", "[]")
-    category_budget = state.get("category_budget", '{"Groceries":200,"Rent":1000,"Utilities":150,"Entertainment":100}')
-    categorized_str = state.get("categorized_str", "")
-    summary_str = state.get("summary_str", "")
     
+    # Apply default values for any missing state fields
     # Placeholder implementation - will be completed in next task
     if transactions == "[]":
         return {"categorized_str": "[]"}
@@ -38,8 +45,6 @@ def summarizer(state: State) -> dict:
 def advisor(state: State) -> dict:
     """Advisor node - compares spending vs budget and generates advice"""
     # Ensure default state values are set if not provided
-    category_budget = state.get("category_budget", '{"Groceries":200,"Rent":1000,"Utilities":150,"Entertainment":100}')
-    summary_str = state.get("summary_str", "{}")
     
     # Placeholder implementation - will be completed in next task
     category_summary = json.loads(state.get("summary_str", "{}"))
@@ -61,5 +66,5 @@ graph_builder.add_edge("summarizer", "advisor")
 graph_builder.add_edge("advisor", END)
 
 # Compile the graph and export as compiled_graph for evaluation script
-compiled_graph = graph_builder.compile()
+
 
