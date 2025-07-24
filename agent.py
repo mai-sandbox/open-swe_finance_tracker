@@ -50,3 +50,6 @@ graph_builder.add_edge(START, "categorizer")
 graph_builder.add_edge("categorizer", "summarizer")
 graph_builder.add_edge("summarizer", "advisor")
 graph_builder.add_edge("advisor", END)
+
+# Compile the graph and export as compiled_graph for evaluation script
+compiled_graph = graph_builder.compile()
