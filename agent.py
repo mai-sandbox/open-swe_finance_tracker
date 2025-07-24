@@ -19,8 +19,13 @@ graph_builder = StateGraph(State)
 # Node functions will be implemented in subsequent tasks
 def categorizer(state: State) -> dict:
     """Categorizer node - uses LLM to assign category field to each transaction"""
-    # Placeholder implementation - will be completed in next task
+    # Ensure default state values are set if not provided
     transactions = state.get("transactions", "[]")
+    category_budget = state.get("category_budget", '{"Groceries":200,"Rent":1000,"Utilities":150,"Entertainment":100}')
+    categorized_str = state.get("categorized_str", "")
+    summary_str = state.get("summary_str", "")
+    
+    # Placeholder implementation - will be completed in next task
     if transactions == "[]":
         return {"categorized_str": "[]"}
     return {"categorized_str": transactions}  # Temporary passthrough
@@ -32,6 +37,10 @@ def summarizer(state: State) -> dict:
 
 def advisor(state: State) -> dict:
     """Advisor node - compares spending vs budget and generates advice"""
+    # Ensure default state values are set if not provided
+    category_budget = state.get("category_budget", '{"Groceries":200,"Rent":1000,"Utilities":150,"Entertainment":100}')
+    summary_str = state.get("summary_str", "{}")
+    
     # Placeholder implementation - will be completed in next task
     category_summary = json.loads(state.get("summary_str", "{}"))
     final_report = {
@@ -53,3 +62,4 @@ graph_builder.add_edge("advisor", END)
 
 # Compile the graph and export as compiled_graph for evaluation script
 compiled_graph = graph_builder.compile()
+
