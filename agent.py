@@ -141,10 +141,77 @@ def summarizer(state: State) -> dict:
     return {"summary_str": json.dumps(category_totals)}
 
 
+def advisor(state: State) -> dict:
+    """
+    Advisor node that compares spending vs budget and generates advice for over-budget categories.
+    
+    Input: state['summary_str'] and state['category_budget']
+    Output: Final report JSON string with category_summary and advice fields
+    """
+    summary_str = state.get('summary_str', '{}')
+    budget_str = state.get('category_budget', '{}')
+    
+    # Parse the summary and budget JSON strings
+    try:
+        category_summary = json.loads(summary_str)
+    except json.JSONDecodeError:
+        category_summary = {}
+    
+    try:
+        category_budget = json.loads(budget_str)
+    except json.JSONDecodeError:
+        category_budget = {}
+    
+    # Initialize advice dictionary
+    advice = {}
+    
+    # Compare spending vs budget and generate advice for over-budget categories
+    for category, budget_amount in category_budget.items():
+        spent_amount = category_summary.get(category, 0.0)
+        
+        if spent_amount > budget_amount:
+            # Category is over budget, generate advice using LLM
+            over_amount = spent_amount - budget_amount
+            prompt = f"""You are a financial advisor. A person has overspent in the "{category}" category.
+
+Budget: ${budget_amount:.2f}
+Actual spending: ${spent_amount:.2f}
+Over budget by: ${over_amount:.2f}
+
+Please provide a brief, practical tip (1-2 sentences) to help them reduce spending in the {category} category. Be specific and actionable."""
+
+            try:
+                response = llm.invoke([HumanMessage(content=prompt)])
+                advice[category] = response.content.strip()
+            except Exception:
+                # Fallback advice if LLM fails
+                advice[category] = f"You're over budget by ${over_amount:.2f}. Consider reducing {category.lower()} expenses."
+        else:
+            # Category is within budget, provide positive reinforcement
+            remaining = budget_amount - spent_amount
+            if remaining > 0:
+                advice[category] = f"Great job! You're ${remaining:.2f} under budget in {category}."
+            else:
+                advice[category] = f"Perfect! You've stayed exactly on budget for {category}."
+    
+    # Create final report
+    final_report = {
+        "category_summary": category_summary,
+        "advice": advice
+    }
+    
+    # Return the final report as JSON string (this is the final output)
+    return json.dumps(final_report)
+
+
 # Add the categorizer node to the graph
 graph_builder.add_node("categorizer", categorizer)
 
 # Add the summarizer node to the graph
 graph_builder.add_node("summarizer", summarizer)
+
+
+# Add the advisor node to the graph
+graph_builder.add_node("advisor", advisor)
 
 
