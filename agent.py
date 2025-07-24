@@ -71,8 +71,38 @@ Return only the JSON array, no additional text."""
 
 def summarizer(state: State) -> dict:
     """Summarizer node - parses categorized transactions and sums amounts per category"""
-    # Placeholder implementation - will be completed in next task
-    return {"summary_str": "{}"}
+    # Get categorized transactions from state
+    categorized_str = state.get("categorized_str", "[]")
+    
+    try:
+        # Parse the categorized transactions JSON string
+        categorized_transactions = json.loads(categorized_str)
+        
+        # Initialize category totals dictionary
+        category_totals = {}
+        
+        # Sum amounts per category
+        for transaction in categorized_transactions:
+            # Get category and amount from transaction
+            category = transaction.get("category", "Other")
+            amount = transaction.get("amount", 0)
+            
+            # Convert amount to float if it's a string
+            if isinstance(amount, str):
+                try:
+                    amount = float(amount)
+                except ValueError:
+                    amount = 0
+            
+            # Add to category total
+            category_totals[category] = category_totals.get(category, 0) + amount
+        
+        # Return category totals as JSON string
+        return {"summary_str": json.dumps(category_totals)}
+        
+    except (json.JSONDecodeError, Exception) as e:
+        # If there's an error, return empty summary
+        return {"summary_str": "{}"}
 
 def advisor(state: State) -> dict:
     """Advisor node - compares spending vs budget and generates advice"""
@@ -99,6 +129,7 @@ graph_builder.add_edge("advisor", END)
 
 # Compile the graph and export as compiled_graph for evaluation script
 compiled_graph = graph_builder.compile()
+
 
 
 
