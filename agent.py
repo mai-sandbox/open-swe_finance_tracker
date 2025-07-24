@@ -106,6 +106,45 @@ Return the transactions as a JSON array with the added "category" field for each
         return {"categorized_str": json.dumps(transactions)}
 
 
+def summarizer(state: State) -> dict:
+    """
+    Summarizer node that takes categorized transactions and sums amounts per category.
+    
+    Input: state['categorized_str'] - JSON string of categorized transactions
+    Output: JSON string of {category: total} -> stored in state['summary_str']
+    """
+    categorized_str = state.get('categorized_str', '[]')
+    
+    # Parse the categorized transactions JSON string
+    try:
+        categorized_transactions = json.loads(categorized_str)
+    except json.JSONDecodeError:
+        categorized_transactions = []
+    
+    # Initialize category totals dictionary
+    category_totals = {}
+    
+    # Sum amounts per category
+    for transaction in categorized_transactions:
+        if isinstance(transaction, dict):
+            category = transaction.get('category', 'Other')
+            amount = transaction.get('amount', 0)
+            # Convert amount to float if it's a string
+            try:
+                amount = float(amount)
+            except (ValueError, TypeError):
+                amount = 0.0
+            
+            category_totals[category] = category_totals.get(category, 0.0) + amount
+    
+    # Return the category totals as JSON string
+    return {"summary_str": json.dumps(category_totals)}
+
+
 # Add the categorizer node to the graph
 graph_builder.add_node("categorizer", categorizer)
+
+# Add the summarizer node to the graph
+graph_builder.add_node("summarizer", summarizer)
+
 
