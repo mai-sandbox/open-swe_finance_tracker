@@ -18,18 +18,35 @@ graph_builder = StateGraph(State)
 
 # Node functions will be implemented in subsequent tasks
 def categorizer(state: State) -> dict:
-    """Categorizer node - to be implemented"""
-    return {"categorized_str": ""}
+    """Categorizer node - uses LLM to assign category field to each transaction"""
+    # Placeholder implementation - will be completed in next task
+    transactions = state.get("transactions", "[]")
+    if transactions == "[]":
+        return {"categorized_str": "[]"}
+    return {"categorized_str": transactions}  # Temporary passthrough
 
 def summarizer(state: State) -> dict:
-    """Summarizer node - to be implemented"""
-    return {"summary_str": ""}
+    """Summarizer node - parses categorized transactions and sums amounts per category"""
+    # Placeholder implementation - will be completed in next task
+    return {"summary_str": "{}"}
 
 def advisor(state: State) -> dict:
-    """Advisor node - to be implemented"""
-    return {"summary_str": ""}
+    """Advisor node - compares spending vs budget and generates advice"""
+    # Placeholder implementation - will be completed in next task
+    category_summary = json.loads(state.get("summary_str", "{}"))
+    final_report = {
+        "category_summary": category_summary,
+        "advice": {}
+    }
+    return {"summary_str": json.dumps(final_report)}
 
 # Add nodes to the graph
 graph_builder.add_node("categorizer", categorizer)
 graph_builder.add_node("summarizer", summarizer)
 graph_builder.add_node("advisor", advisor)
+
+# Add edges to connect the nodes: START -> categorizer -> summarizer -> advisor -> END
+graph_builder.add_edge(START, "categorizer")
+graph_builder.add_edge("categorizer", "summarizer")
+graph_builder.add_edge("summarizer", "advisor")
+graph_builder.add_edge("advisor", END)
