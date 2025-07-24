@@ -31,11 +31,43 @@ def categorizer(state: State) -> dict:
     # Ensure default state values are set if not provided
     transactions = state.get("transactions", "[]")
     
-    # Apply default values for any missing state fields
-    # Placeholder implementation - will be completed in next task
+    # If no transactions, return empty categorized list
     if transactions == "[]":
         return {"categorized_str": "[]"}
-    return {"categorized_str": transactions}  # Temporary passthrough
+    
+    try:
+        # Parse the transactions JSON string
+        transactions_list = json.loads(transactions)
+        
+        # If empty list, return empty categorized list
+        if not transactions_list:
+            return {"categorized_str": "[]"}
+        
+        # Create prompt for LLM to categorize transactions
+        prompt = f"""You are a financial categorization assistant. Given a list of transactions, assign each transaction to one of these categories: Groceries, Rent, Utilities, Entertainment, or Other.
+
+Transactions to categorize:
+{json.dumps(transactions_list, indent=2)}
+
+For each transaction, add a "category" field with the most appropriate category. Return the complete list as valid JSON with all original fields plus the new "category" field.
+
+Example format:
+[{{"date": "2024-01-01", "description": "Grocery Store", "amount": 50.0, "category": "Groceries"}}]
+
+Return only the JSON array, no additional text."""
+
+        # Use LLM to categorize transactions
+        response = llm.invoke(prompt)
+        categorized_transactions = response.content.strip()
+        
+        # Validate that the response is valid JSON
+        json.loads(categorized_transactions)  # This will raise an exception if invalid
+        
+        return {"categorized_str": categorized_transactions}
+        
+    except (json.JSONDecodeError, Exception) as e:
+        # If there's an error, return the original transactions without categories
+        return {"categorized_str": transactions}
 
 def summarizer(state: State) -> dict:
     """Summarizer node - parses categorized transactions and sums amounts per category"""
@@ -67,5 +99,6 @@ graph_builder.add_edge("advisor", END)
 
 # Compile the graph and export as compiled_graph for evaluation script
 compiled_graph = graph_builder.compile()
+
 
 
