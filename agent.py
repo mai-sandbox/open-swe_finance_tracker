@@ -106,15 +106,67 @@ def summarizer(state: State) -> dict:
 
 def advisor(state: State) -> dict:
     """Advisor node - compares spending vs budget and generates advice"""
-    # Ensure default state values are set if not provided
+    # Get summary and budget from state
+    summary_str = state.get("summary_str", "{}")
+    category_budget_str = state.get("category_budget", '{"Groceries":200,"Rent":1000,"Utilities":150,"Entertainment":100}')
     
-    # Placeholder implementation - will be completed in next task
-    category_summary = json.loads(state.get("summary_str", "{}"))
-    final_report = {
-        "category_summary": category_summary,
-        "advice": {}
-    }
-    return {"summary_str": json.dumps(final_report)}
+    try:
+        # Parse the summary and budget JSON strings
+        category_summary = json.loads(summary_str)
+        category_budget = json.loads(category_budget_str)
+        
+        # Initialize advice dictionary
+        advice = {}
+        
+        # Compare spending vs budget for each category
+        over_budget_categories = []
+        for category, budget_amount in category_budget.items():
+            spent_amount = category_summary.get(category, 0)
+            if spent_amount > budget_amount:
+                over_budget_categories.append({
+                    "category": category,
+                    "budget": budget_amount,
+                    "spent": spent_amount,
+                    "overage": spent_amount - budget_amount
+                })
+        
+        # Generate advice for over-budget categories using LLM
+        if over_budget_categories:
+            for over_budget in over_budget_categories:
+                category = over_budget["category"]
+                budget = over_budget["budget"]
+                spent = over_budget["spent"]
+                overage = over_budget["overage"]
+                
+                # Create prompt for LLM to generate advice
+                prompt = f"""You are a personal finance advisor. A user has overspent in the {category} category.
+
+Budget: ${budget:.2f}
+Actual spending: ${spent:.2f}
+Amount over budget: ${overage:.2f}
+
+Provide a brief, practical tip (1-2 sentences) to help them reduce spending in the {category} category next month. Be specific and actionable."""
+
+                # Use LLM to generate advice
+                response = llm.invoke(prompt)
+                advice[category] = response.content.strip()
+        
+        # Create final report
+        final_report = {
+            "category_summary": category_summary,
+            "advice": advice
+        }
+        
+        return {"summary_str": json.dumps(final_report)}
+        
+    except (json.JSONDecodeError, Exception) as e:
+        # If there's an error, return basic report without advice
+        category_summary = json.loads(state.get("summary_str", "{}"))
+        final_report = {
+            "category_summary": category_summary,
+            "advice": {}
+        }
+        return {"summary_str": json.dumps(final_report)}
 
 # Add nodes to the graph
 graph_builder.add_node("categorizer", categorizer)
@@ -129,6 +181,7 @@ graph_builder.add_edge("advisor", END)
 
 # Compile the graph and export as compiled_graph for evaluation script
 compiled_graph = graph_builder.compile()
+
 
 
 
