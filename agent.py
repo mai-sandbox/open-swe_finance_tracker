@@ -200,8 +200,8 @@ Please provide a brief, practical tip (1-2 sentences) to help them reduce spendi
         "advice": advice
     }
     
-    # Return the final report as JSON string (this is the final output)
-    return json.dumps(final_report)
+    # Return the final report as JSON string stored in a state field
+    return {"final_report": json.dumps(final_report)}
 
 
 # Add the categorizer node to the graph
