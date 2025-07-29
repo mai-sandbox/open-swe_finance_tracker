@@ -48,5 +48,27 @@ def summarizer(state: State):
         return {"summary_str": "{}"}
 
 
+def advisor(state: State):
+    summary_str = state.get("summary_str")
+    category_budget_str = state.get("category_budget", default_category_budget)
+    try:
+        summary = json.loads(summary_str)
+        budget = json.loads(category_budget_str)
+        advice = {}
+        llm = ChatAnthropic(model="claude-3-5-sonnet-20240620")
+        for category, spent in summary.items():
+            budget_amount = budget.get(category)
+            if budget_amount is not None and spent > budget_amount:
+                overage = spent - budget_amount
+                prompt = f"You overspent ${overage:.2f} in {category} (budget: ${budget_amount}, spent: ${spent}). Provide one practical tip in 1-2 sentences to reduce spending."
+                response = llm.invoke(prompt)
+                advice[category] = response.content
+        final_output = {"category_summary": summary, "advice": advice}
+        return {"summary_str": json.dumps(final_output)}
+    except (json.JSONDecodeError, TypeError):
+        return {"summary_str": json.dumps({"category_summary": json.loads(summary_str if summary_str else '{}'), "advice": {}})}
+
+
+
 
 
