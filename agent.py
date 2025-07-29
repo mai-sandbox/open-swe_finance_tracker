@@ -2,6 +2,7 @@
 import json
 from typing import Annotated
 from langchain_anthropic import ChatAnthropic
+from langgraph.graph import StateGraph, START, END
 
 from typing_extensions import TypedDict
 
@@ -67,6 +68,17 @@ def advisor(state: State):
         return {"summary_str": json.dumps(final_output)}
     except (json.JSONDecodeError, TypeError):
         return {"summary_str": json.dumps({"category_summary": json.loads(summary_str if summary_str else '{}'), "advice": {}})}
+
+
+graph_builder = StateGraph(State)
+graph_builder.add_node("categorizer", categorizer)
+graph_builder.add_node("summarizer", summarizer)
+graph_builder.add_node("advisor", advisor)
+graph_builder.add_edge(START, "categorizer")
+graph_builder.add_edge("categorizer", "summarizer")
+graph_builder.add_edge("summarizer", "advisor")
+graph_builder.add_edge("advisor", END)
+
 
 
 
