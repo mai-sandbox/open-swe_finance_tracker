@@ -34,4 +34,19 @@ Transactions: {transactions}"""
         return {"categorized_str": transactions}
 
 
+def summarizer(state: State):
+    categorized_str = state.get("categorized_str")
+    try:
+        transactions = json.loads(categorized_str)
+        summary = {}
+        for t in transactions:
+            category = t.get("category")
+            amount = t.get("amount")
+            summary[category] = summary.get(category, 0) + amount
+        return {"summary_str": json.dumps(summary)}
+    except (json.JSONDecodeError, TypeError):
+        return {"summary_str": "{}"}
+
+
+
 
